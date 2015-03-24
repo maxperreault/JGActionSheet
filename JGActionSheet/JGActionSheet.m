@@ -49,7 +49,10 @@
 
 #define kHostsCornerRadius 3.0f
 
-#define kSpacing 5.0f
+#define kSpacing 0.0f
+#define margin 15.0f
+#define sectionSpacing 10.0f
+#define bottomSpacing 20.0f
 
 #define kArrowBaseWidth 20.0f
 #define kArrowHeight 10.0f
@@ -188,6 +191,8 @@ static BOOL disableCustomEasing = NO;
 
 @interface JGActionSheetSection ()
 
+@property (nonatomic, strong) UIImageView *backgroundView;
+
 @property (nonatomic, assign) NSUInteger index;
 
 @property (nonatomic, copy) void (^buttonPressedBlock)(NSIndexPath *indexPath);
@@ -260,6 +265,13 @@ static BOOL disableCustomEasing = NO;
             
             _buttons = buttons.copy;
         }
+        
+        UIImage *image = [UIImage imageNamed:@"primary-background"];
+        self.backgroundView = [[UIImageView alloc] initWithImage:image];
+        self.backgroundView.contentMode = UIViewContentModeScaleAspectFill;
+        [self addSubview:self.backgroundView];
+        [self sendSubviewToBack:self.backgroundView];
+        self.clipsToBounds = YES;
     }
     
     return self;
@@ -320,7 +332,7 @@ static BOOL disableCustomEasing = NO;
         self.layer.shadowOpacity = 0.0f;
     }
     else {
-        self.backgroundColor = [UIColor whiteColor];
+        self.backgroundColor = [UIColor clearColor];
         self.layer.cornerRadius = kHostsCornerRadius;
         
         self.layer.shadowColor = [UIColor blackColor].CGColor;
@@ -343,7 +355,7 @@ static BOOL disableCustomEasing = NO;
 }
 
 - (UIImage *)pixelImageWithColor:(UIColor *)color {
-    UIGraphicsBeginImageContextWithOptions((CGSize){1.0f, 1.0f}, YES, 0.0f);
+    UIGraphicsBeginImageContextWithOptions((CGSize){1.0f, 1.0f}, NO, 0.0f);
     
     [color setFill];
     
@@ -361,11 +373,19 @@ static BOOL disableCustomEasing = NO;
     UIFont *font = nil;
     
     if (buttonStyle == JGActionSheetButtonStyleDefault) {
+        
+        font = [UIFont fontWithName:@"roboto-bold" size:12.0f];
+        titleColor =  [UIColor colorWithWhite:1.0f alpha:0.40f];
+        
+        backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.00f];
+        borderColor = [UIColor colorWithWhite:1.0f alpha:0.10f];
+        /**
         font = [UIFont systemFontOfSize:15.0f];
         titleColor = [UIColor blackColor];
         
         backgroundColor = [UIColor colorWithWhite:0.95f alpha:1.0f];
         borderColor = [UIColor colorWithWhite:0.9f alpha:1.0f];
+         **/
     }
     else if (buttonStyle == JGActionSheetButtonStyleCancel) {
         font = [UIFont boldSystemFontOfSize:15.0f];
@@ -429,7 +449,7 @@ static BOOL disableCustomEasing = NO;
 }
 
 - (CGRect)layoutForWidth:(CGFloat)width {
-    CGFloat buttonHeight = 40.0f;
+    CGFloat buttonHeight = 50.0f;
     CGFloat spacing = kSpacing;
     
     CGFloat height = 0.0f;
@@ -486,6 +506,7 @@ static BOOL disableCustomEasing = NO;
     height += spacing;
     
     self.frame = (CGRect){CGPointZero, {width, height}};
+    self.backgroundView.frame = self.bounds;
     
     return self.frame;
 }
@@ -542,7 +563,7 @@ static BOOL disableCustomEasing = NO;
         [_scrollViewHost addSubview:_scrollView];
         [self addSubview:_scrollViewHost];
         
-        self.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.3f];
+        self.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
         
         _sections = sections;
         
@@ -560,7 +581,6 @@ static BOOL disableCustomEasing = NO;
             [_scrollView addSubview:section];
             
             [section setButtonPressedBlock:pressedBlock];
-            
             index++;
         }
     }
@@ -632,7 +652,7 @@ static BOOL disableCustomEasing = NO;
         frame.size.width = kFixedWidthContinuous;
     }
     
-    CGFloat spacing = 2.0f*kSpacing;
+    CGFloat spacing = margin;
     
     CGFloat width = CGRectGetWidth(frame);
     
@@ -657,12 +677,14 @@ static BOOL disableCustomEasing = NO;
         
         section.frame = f;
         
-        height += CGRectGetHeight(f)+spacing;
+        height += CGRectGetHeight(f)+sectionSpacing;
     }
     
     if (continuous) {
         height -= spacing;
     }
+    
+    height += bottomSpacing-sectionSpacing;
     
     _scrollView.contentSize = (CGSize){CGRectGetWidth(frame), height};
     
@@ -785,7 +807,7 @@ static BOOL disableCustomEasing = NO;
     
     frame = UIEdgeInsetsInsetRect(frame, self.insets);
     
-    [self layoutSheetForFrame:frame fitToRect:!iPad initialSetUp:initial continuous:NO];
+    [self layoutSheetForFrame:frame fitToRect:YES initialSetUp:initial continuous:NO];
 }
 
 #pragma mark Showing From Point
@@ -884,7 +906,7 @@ static BOOL disableCustomEasing = NO;
         
         finalFrame = UIEdgeInsetsInsetRect(finalFrame, self.insets);
         
-        _scrollViewHost.backgroundColor = [UIColor whiteColor];
+        _scrollViewHost.backgroundColor = [UIColor clearColor];
         
         _scrollViewHost.layer.cornerRadius = kHostsCornerRadius;
         
@@ -893,7 +915,7 @@ static BOOL disableCustomEasing = NO;
         _scrollViewHost.layer.shadowRadius = kShadowRadius;
         _scrollViewHost.layer.shadowOpacity = kShadowOpacity;
         
-        [self layoutSheetForFrame:finalFrame fitToRect:NO initialSetUp:YES continuous:YES];
+        [self layoutSheetForFrame:finalFrame fitToRect:YES initialSetUp:YES continuous:YES];
         
         [self anchorSheetAtPoint:point withArrowDirection:arrowDirection availableFrame:finalFrame];
     };
